@@ -15,8 +15,15 @@ class Scrolling_Game:
         self.last_input = False #直前のフレームでキー入力があったか
         self.item_x = random.randint(0, 120)
         self.item_y = random.randint(0, 120)
+        self.spiderweb_x = 128
+        self.spiderweb_y = random.randint(0, 120)
+        self.spiderweb_speed = 3
+        self.sickle_x = 128
+        self.sickle_y = random.randint(0, 120)
+        self.sickle_speed = 3
         self.score = 0
         self.is_out_of_screen = False  # 画面外フラグ
+        self.collision_flag = False
 
         pyxel.playm(0, loop=True)
         pyxel.run(self.update, self.draw)
@@ -37,8 +44,15 @@ class Scrolling_Game:
             self.last_input = False #直前のフレームでキー入力があったか
             self.item_x = random.randint(0, 120)
             self.item_y = random.randint(0, 120)
+            self.spiderweb_x = 128
+            self.spiderweb_y = random.randint(0, 120)
+            self.spiderweb_speed = 3
+            self.sickle_x = 128
+            self.sickle_y = random.randint(0, 120)
+            self.sickle_speed = 3
             self.score = 0
             self.is_out_of_screen = False  # 画面外フラグ
+            self.collision_flag = False
 
         self.scroll_x += self.scroll_speed  # スクロール位置を更新
         self.char_x -= self.scroll_speed  # キャラ位置を更新
@@ -46,21 +60,32 @@ class Scrolling_Game:
         if self.scroll_x > 128:  # 128は背景画像の幅
             self.scroll_x = 0 
 
-        # 画面外判定
-        if self.char_x < 0 or self.char_x > 128 or self.char_y < 0 or self.char_y > 128:
-            self.is_out_of_screen = True
-        else:
-            self.is_out_of_screen = False
+        self.spiderweb_x -= self.spiderweb_speed
+        self.sickle_x -= self.sickle_speed
+        if self.spiderweb_x < 0:
+            self.spiderweb_x = 128
+            self.spiderweb_y = random.randint(0, 120)
+        elif self.sickle_x < 0:
+            self.sickle_x = 128
+            self.sickle_y = random.randint(0, 120)
+        # 当たり判定
+        if (self.char_x < self.spiderweb_x + 12 and
+            self.char_x + 12 > self.spiderweb_x and
+            self.char_y < self.spiderweb_y + 12 and
+            self.char_y + 12 > self.spiderweb_y):
 
-        # # 画面内のみキー入力とスクロール処理
-        # if not self.is_out_of_screen:
-        #     self.scroll_x += self.scroll_speed
-        #     if self.scroll_x > 128:
-        #         self.scroll_x = 0
+            # 当たり時の処理 (例: ゲームオーバー)
+            self.collision_flag = True
 
-        #     self.char_x -= self.scroll_speed
+        # 当たり判定
+        if (self.char_x < self.sickle_x + 12 and
+            self.char_x + 12 > self.sickle_x and
+            self.char_y < self.sickle_y + 12 and
+            self.char_y + 12 > self.sickle_y):
 
-        
+            # 当たり時の処理 (例: ゲームオーバー)
+            self.collision_flag = True
+
         # キー入力と移動処理
         self.is_moving = False
         key_pressed = False # 今のフレームでキーが押されているか
@@ -106,7 +131,11 @@ class Scrolling_Game:
 
         pyxel.bltm(0, 0, 0, self.scroll_x, 0, 128, 128)
         pyxel.blt(self.item_x, self.item_y, 0, 8, 24, 8, 8, 0)
-            
+
+        pyxel.blt(self.spiderweb_x, self.spiderweb_y, 0, 32, 0, 16, 16, 0)
+        pyxel.blt(self.sickle_x, self.sickle_y, 0, 48, 0, 16, 16, 0)
+        
+
         # キャラクターの描画 (アニメーション)
         if self.char_frame == 0:
             pyxel.blt(self.char_x, self.char_y, 0, 0, 0, 16, 16, 7)
@@ -115,7 +144,8 @@ class Scrolling_Game:
 
         pyxel.text(5, 5, f"Score: {self.score}", 1)
         # キャラクターが画面外に出た場合
-        if self.char_x < 0 or self.char_x > 128 or self.char_y < 0 or self.char_y > 128:
+        if (self.char_x < -16 or self.char_x > 128 or self.char_y < -16 or self.char_y > 128) or (self.collision_flag):
+            self.collision_flag = True
             pyxel.bltm(0, 0, 0, 0, 128, 128, 128)  # 指定のタイルを表示
 
 Scrolling_Game()
